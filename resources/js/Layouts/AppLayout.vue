@@ -18,22 +18,25 @@ const nav = [
         items: [
             { label: 'Inicio', href: '/',       icon: 'pi pi-home' },
             { label: 'Ventas', href: '/ventas', icon: 'pi pi-shopping-cart' },
+            { label: 'Caja',   href: '/caja',   icon: 'pi pi-wallet' },
+            { label: 'Eventos', href: '/eventos', icon: 'pi pi-bolt' },
         ],
     },
     {
         seccion: 'Mantenedores',
         items: [
-            { label: 'Productos',          href: '/productos',    icon: 'pi pi-box' },
-            { label: 'Familias',           href: '/familias',     icon: 'pi pi-sitemap' },
-            { label: 'Unidades de medida', href: '/unidades',     icon: 'pi pi-tags' },
-            { label: 'Tipos de unidad',    href: '/unidad-tipos', icon: 'pi pi-list' },
-            { label: 'Clientes',           href: '/clientes',     icon: 'pi pi-users' },
+            { label: 'Productos',          href: '/productos',         icon: 'pi pi-box' },
+            { label: 'Familias',           href: '/familias',          icon: 'pi pi-sitemap' },
+            { label: 'Unidades de medida', href: '/unidades',          icon: 'pi pi-tags' },
+            { label: 'Tipos de unidad',    href: '/unidad-tipos',      icon: 'pi pi-list' },
+            { label: 'Clientes',           href: '/clientes',          icon: 'pi pi-users' },
+            { label: 'Tipos de egreso',    href: '/caja-egreso-tipos', icon: 'pi pi-arrow-up-right' },
         ],
     },
 ];
 
 const isActive = (href) =>
-    href === '/' ? page.url === '/' : page.url.startsWith(href);
+    href === '/' ? page.url === '/' : (page.url === href || page.url.startsWith(href + '/'));
 
 // ---- Flash -> toast ----
 watch(

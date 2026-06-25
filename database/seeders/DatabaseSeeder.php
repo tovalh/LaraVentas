@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\Caja;
+use App\Models\CajaEgresoTipo;
 use App\Models\Cliente;
 use App\Models\Comuna;
 use App\Models\Empresa;
+use App\Models\Evento;
 use App\Models\Familia;
 use App\Models\Notificacion;
 use App\Models\Producto;
@@ -46,7 +49,7 @@ class DatabaseSeeder extends Seeder
             ]);
 
             // Transacción: acelera mucho la siembra de miles de filas en MySQL.
-            DB::transaction(fn () => $this->datosEmpresa($empresa->idgen_empresa));
+            DB::transaction(fn () => $this->datosEmpresa($empresa->idgen_empresa, $user->id));
 
             $this->notificaciones($user->id, $empresa->idgen_empresa);
         }
@@ -96,7 +99,7 @@ class DatabaseSeeder extends Seeder
     }
 
     /** Maestros + ventas demo de una empresa. */
-    private function datosEmpresa(int $empresaId): void
+    private function datosEmpresa(int $empresaId, int $userId): void
     {
         // Tipos de unidad de medida
         $tipos = [];
@@ -203,5 +206,64 @@ class DatabaseSeeder extends Seeder
             $iva = (int) round($neto * 0.19);
             $venta->update(['neto' => $neto, 'iva' => $iva, 'total' => $neto + $iva]);
         }
+
+        $this->caja($empresaId, $userId);
+    }
+
+    /** Caja abierta demo: tipos de egreso + movimientos + ventas vinculadas + eventos. */
+    private function caja(int $empresaId, int $userId): void
+    {
+        $egresoTipos = [];
+        foreach (['Gasto general', 'Retiro de efectivo', 'Pago a proveedor', 'Compra de insumos'] as $d) {
+            $egresoTipos[] = CajaEgresoTipo::create([
+                'idgen_empresa' => $empresaId, 'descripcion' => $d, 'habilitado' => true,
+            ])->idven_cajarendicionegreso_tipo;
+        }
+
+        $montoInicial = 50000;
+        $caja = Caja::create([
+            'idgen_empresa'    => $empresaId,
+            'idusu_usuario'    => $userId,
+            'idven_cajaestado' => Caja::ABIERTA,
+            'descripcion'      => 'Caja',
+            'monto_inicial'    => $montoInicial,
+            'fecha_apertura'   => now(),
+            'habilitado'       => true,
+        ]);
+
+        $hoy = now()->toDateString();
+        $caja->movimientos()->create(['idgen_empresa' => $empresaId, 'tipo' => 'apertura',
+            'descripcion' => 'Monto apertura de caja', 'monto' => $montoInicial, 'fecha' => $hoy]);
+        $this->evento($empresaId, $userId, 'caja.abierta', 'Caja abierta', ['monto_inicial' => $montoInicial]);
+
+        $caja->movimientos()->create(['idgen_empresa' => $empresaId, 'tipo' => 'ingreso',
+            'descripcion' => 'Cambio inicial adicional', 'monto' => 20000, 'fecha' => $hoy]);
+        $this->evento($empresaId, $userId, 'caja.ingreso', 'Ingreso de caja: Cambio inicial adicional', ['monto' => 20000]);
+
+        $caja->movimientos()->create(['idgen_empresa' => $empresaId, 'tipo' => 'egreso',
+            'idven_cajarendicionegreso_tipo' => $egresoTipos[0],
+            'descripcion' => 'Compra de café para la oficina', 'monto' => 6500, 'fecha' => $hoy]);
+        $this->evento($empresaId, $userId, 'caja.egreso', 'Egreso de caja: Compra de café para la oficina', ['monto' => 6500]);
+
+        // Vincula las ventas más recientes a la caja abierta (fecha de hoy) + eventos.
+        $recientes = Venta::where('idgen_empresa', $empresaId)->orderByDesc('idven_venta')->limit(6)->get();
+        foreach ($recientes as $v) {
+            $v->update(['idven_caja' => $caja->idven_caja, 'fecha' => $hoy]);
+            $this->evento($empresaId, $userId, 'venta.registrada', "Venta {$v->numero} registrada", ['total' => $v->total]);
+        }
+    }
+
+    /** Evento de dominio para el seeder (sin auth: empresa/usuario explícitos). */
+    private function evento(int $empresaId, int $userId, string $tipo, string $titulo, array $detalle): void
+    {
+        Evento::create([
+            'idgen_empresa' => $empresaId,
+            'idusu_usuario' => $userId,
+            'tipo'          => $tipo,
+            'titulo'        => $titulo,
+            'detalle'       => $detalle,
+            'userins'       => 'system',
+            'fechains'      => now(),
+        ]);
     }
 }
