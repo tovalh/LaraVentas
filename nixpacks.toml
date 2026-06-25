@@ -1,0 +1,19 @@
+# Railway / Nixpacks — KUDOS Demo (Laravel + Inertia + Vue + PrimeVue)
+# Base de datos: MySQL (una sola conexión, definida por las variables DB_* en Railway).
+# La data demo se regenera limpia en cada despliegue (migrate:fresh --seed).
+
+providers = ["php", "node"]
+
+[phases.install]
+cmds = [
+    "composer install --no-dev --optimize-autoloader --no-interaction",
+    "npm ci",
+]
+
+[phases.build]
+cmds = [
+    "npm run build",
+]
+
+[start]
+cmd = "bash deploy/start.sh"

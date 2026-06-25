@@ -1,0 +1,54 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source './**/*.vue';
+@source './**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* --- Estilo ERP (KUDOS Demo) --- */
+:root {
+    --kd-sidebar: #0f172a;   /* slate-900 */
+    --kd-sidebar-2: #1e293b; /* slate-800 */
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    background: #f1f5f9; /* slate-100 */
+}
+
+/* Scrollbar discreto */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+/* --- Botonera fija (colores del ERP original) --- */
+.kd-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: filter .15s ease, opacity .15s ease;
+    white-space: nowrap;
+}
+.kd-btn:hover { filter: brightness(1.05); }
+.kd-btn:active { filter: brightness(.95); }
+.kd-btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+
+.kd-btn-nuevo    { background: #3497dc; }  /* azul  — Nuevo  */
+.kd-btn-guardar  { background: #fc7a23; }  /* naranjo — Guardar */
+.kd-btn-eliminar { background: #dc3545; }  /* rojo  — Eliminar */
+.kd-btn-volver   { background: #64748b; }  /* gris  — Volver */
+.kd-btn-filtro   { background: #475569; }  /* gris oscuro — Filtros */
+.kd-btn-filtro.kd-active { background: #0ea5e9; }
+
