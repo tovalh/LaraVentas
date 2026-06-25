@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Caja;
 use App\Models\Cliente;
+use App\Models\Evento;
 use App\Models\Notificacion;
 use App\Models\Producto;
 use App\Models\Venta;
@@ -56,13 +58,20 @@ class VentaController extends Controller
             'detalles.*.precio'         => ['required', 'integer', 'min:0'],
         ]);
 
-        $venta = DB::transaction(function () use ($data) {
+        // Caja abierta del usuario (si hay): la venta se vincula y suma a su saldo.
+        $caja = Caja::where('idusu_usuario', auth()->id())
+            ->where('idven_cajaestado', Caja::ABIERTA)
+            ->where('habilitado', true)
+            ->first();
+
+        $venta = DB::transaction(function () use ($data, $caja) {
             $neto  = collect($data['detalles'])->sum(fn ($d) => $d['cantidad'] * $d['precio']);
             $iva   = (int) round($neto * self::IVA);
             $total = $neto + $iva;
 
             $venta = Venta::create([
                 'idgen_cliente' => $data['idgen_cliente'] ?? null,
+                'idven_caja'    => $caja?->idven_caja,
                 'numero'        => $this->siguienteNumero(),
                 'fecha'         => $data['fecha'],
                 'neto'          => $neto,
@@ -84,8 +93,11 @@ class VentaController extends Controller
             return $venta;
         });
 
-        // Disparador de notificación (como en el ERP original: un evento de negocio
-        // genera una notificación al usuario). El push al WebSocket Go es best-effort.
+        // Evento de dominio (capa reusable) + notificación al usuario.
+        Evento::registrar('venta.registrada', "Venta {$venta->numero} registrada",
+            ['total' => $venta->total, 'idven_caja' => $caja?->idven_caja],
+            'ven_venta', $venta->idven_venta);
+
         Notificacion::add(
             auth()->id(),
             'Venta registrada',

@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CajaController;
+use App\Http\Controllers\CajaEgresoTipoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EventoController;
 use App\Http\Controllers\FamiliaController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\ProductoController;
@@ -48,10 +51,23 @@ Route::middleware('auth')->group(function () {
     maestro('/unidades',     UnidadmedidaController::class,     'unidades');
     maestro('/unidad-tipos', UnidadmedidatipoController::class, 'unidad-tipos');
     maestro('/clientes',     ClienteController::class,          'clientes');
+    maestro('/caja-egreso-tipos', CajaEgresoTipoController::class, 'caja-egreso-tipos');
 
     // Tipo B — Maestro-detalle (Ventas)
     Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
     Route::get('/ventas/{venta}', [VentaController::class, 'show'])->name('ventas.show');
     Route::post('/ventas', [VentaController::class, 'store'])->name('ventas.store');
     Route::delete('/ventas/{venta}', [VentaController::class, 'destroy'])->name('ventas.destroy');
+
+    // Caja (gestión + rendición) — cada acción registra un evento de dominio
+    Route::get('/caja', [CajaController::class, 'index'])->name('caja.index');
+    Route::post('/caja/abrir', [CajaController::class, 'abrir'])->name('caja.abrir');
+    Route::post('/caja/ingreso', [CajaController::class, 'ingreso'])->name('caja.ingreso');
+    Route::post('/caja/egreso', [CajaController::class, 'egreso'])->name('caja.egreso');
+    Route::post('/caja/movimiento/{movimiento}/anular', [CajaController::class, 'anular'])->name('caja.anular');
+    Route::post('/caja/cerrar', [CajaController::class, 'cerrar'])->name('caja.cerrar');
+    Route::get('/caja/rendicion/{rendicion}', [CajaController::class, 'rendicion'])->name('caja.rendicion');
+
+    // Log de eventos de dominio (timeline)
+    Route::get('/eventos', [EventoController::class, 'index'])->name('eventos.index');
 });

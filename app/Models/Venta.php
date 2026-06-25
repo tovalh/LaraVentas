@@ -9,7 +9,7 @@ class Venta extends MaestroModel
     protected $primaryKey = 'idven_venta';
 
     protected $fillable = [
-        'idgen_empresa', 'idgen_cliente', 'numero', 'fecha',
+        'idgen_empresa', 'idgen_cliente', 'idven_caja', 'numero', 'fecha',
         'neto', 'iva', 'total', 'habilitado',
     ];
 

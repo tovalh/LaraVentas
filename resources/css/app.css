@@ -48,6 +48,7 @@ html, body {
 .kd-btn-nuevo    { background: #3497dc; }  /* azul  — Nuevo  */
 .kd-btn-guardar  { background: #fc7a23; }  /* naranjo — Guardar */
 .kd-btn-eliminar { background: #dc3545; }  /* rojo  — Eliminar */
+.kd-btn-ingreso  { background: #16a34a; }  /* verde — Ingreso de caja */
 .kd-btn-volver   { background: #64748b; }  /* gris  — Volver */
 .kd-btn-filtro   { background: #475569; }  /* gris oscuro — Filtros */
 .kd-btn-filtro.kd-active { background: #0ea5e9; }

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->id('idven_venta');
             $table->unsignedBigInteger('idgen_empresa')->index();
             $table->unsignedBigInteger('idgen_cliente')->nullable();
+            $table->unsignedBigInteger('idven_caja')->nullable();   // caja abierta al momento de la venta
             $table->string('numero', 20);                 // 001-001-0000001
             $table->date('fecha');
             $table->integer('neto')->default(0);          // CLP
