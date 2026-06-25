@@ -19,12 +19,14 @@ use Illuminate\Support\Facades\Route;
  * listar, crear, modificar y eliminar (soft-delete). Equivale a "crear el archivo
  * del módulo" en el ERP original: con declararlo, ya tiene todo el CRUD.
  */
-function maestro(string $url, string $controller, string $name): void
-{
-    Route::get($url, [$controller, 'index'])->name("$name.index");
-    Route::post($url, [$controller, 'store'])->name("$name.store");
-    Route::put("$url/{id}", [$controller, 'update'])->name("$name.update");
-    Route::delete($url, [$controller, 'destroy'])->name("$name.destroy");
+if (!function_exists('maestro')) {
+    function maestro(string $url, string $controller, string $name): void
+    {
+        Route::get($url, [$controller, 'index'])->name("$name.index");
+        Route::post($url, [$controller, 'store'])->name("$name.store");
+        Route::put("$url/{id}", [$controller, 'update'])->name("$name.update");
+        Route::delete($url, [$controller, 'destroy'])->name("$name.destroy");
+    }
 }
 
 // --- Invitados ---
