@@ -22,7 +22,9 @@ WORKDIR /app
 COPY . .
 COPY --from=assets /app/public/build ./public/build
 
-RUN composer install --no-dev --optimize-autoloader --no-interaction \
+RUN mkdir -p bootstrap/cache \
+        storage/framework/cache storage/framework/sessions storage/framework/views storage/logs \
+    && composer install --no-dev --optimize-autoloader --no-interaction --no-scripts \
     && chmod -R 775 storage bootstrap/cache \
     && chmod +x deploy/start.sh
 
