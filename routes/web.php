@@ -12,7 +12,20 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\UnidadmedidaController;
 use App\Http\Controllers\UnidadmedidatipoController;
 use App\Http\Controllers\VentaController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+
+// Health de dependencias para el monitor externo: { mysql: "ok" | "down" }.
+Route::get('/health/dependencies', function () {
+    try {
+        DB::connection()->getPdo();
+        $mysql = 'ok';
+    } catch (\Throwable $e) {
+        $mysql = 'down';
+    }
+
+    return response()->json(['mysql' => $mysql], $mysql === 'ok' ? 200 : 503);
+});
 
 /**
  * Registra de una sola línea las 4 rutas estándar de un maestro (Tipo A):
