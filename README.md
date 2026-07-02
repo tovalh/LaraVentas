@@ -1,4 +1,176 @@
-# KUDOS Demo — ERP (Laravel + Inertia + Vue 3 + PrimeVue)
+# LaraVentas — ERP demo (Laravel + Inertia + Vue 3 + PrimeVue)
+
+[English](#english) · [Español](#espanol)
+
+<a id="english"></a>
+
+A portfolio demo that reproduces the **structure, patterns and look** of a real
+ERP (sidebar, topbar, maintainers with a fixed action bar, master-detail,
+multi-tenant, auditing, CLP amounts), but wired to a **single MySQL database**
+defined in `.env` and deployable to **Railway** in a few minutes.
+
+> A simplified rewrite built from scratch to showcase the architecture.
+> It contains no code from the original system and no external database
+> connections.
+
+## Stack
+
+- **Backend:** Laravel 13 (PHP 8.4+)
+- **SPA:** Inertia.js + Vue 3
+- **UI:** PrimeVue 4 (Aura theme) on Tailwind v4
+- **DB:** MySQL (a single connection, via the `DB_*` variables in `.env`)
+- **Realtime (optional):** live notifications over WebSocket via a companion
+  Go service ([notif_service](https://github.com/tovalh/notif_service)); falls
+  back to polling when it isn't configured.
+
+## The Maestro "mini-framework"
+
+The most interesting part of the demo: just like in the original ERP (where
+creating one file gave you CRUD, an action bar, filters and auditing), here a
+new maintainer is declared in **a single thin controller** and gets the whole
+UI for free.
+
+```php
+// app/Http/Controllers/UnidadmedidaController.php
+class UnidadmedidaController extends MaestroController
+{
+    protected function maestro(): Maestro
+    {
+        return Maestro::make('Unidades de Medida', Unidadmedida::class, '/unidades')
+            ->with('tipo')
+            ->column('tipo.descripcion', 'Tipo')
+            ->column('descripcion', 'Descripción')
+            ->filterText('descripcion', 'Descripción')
+            ->fieldSwitch('habilitado', 'Habilitado')
+            ->fieldText('descripcion', 'Descripción', required: true, unique: true);
+    }
+}
+```
+
+With that, the module already has: paginated list, collapsible filters, fixed
+action bar (New / Save / Delete), a form with an audit footer, soft-delete,
+uniqueness and multi-tenancy. The UI is painted by **one** generic Vue page
+(`Pages/Maestro/Index.vue`).
+
+| Piece | Role |
+|-------|------|
+| `app/Support/Maestro/Maestro.php`      | Declarative builder (columns, filters, fields) |
+| `app/Http/Controllers/MaestroController.php` | Generic CRUD + auditing + tenant + uniqueness |
+| `resources/js/Pages/Maestro/Index.vue` | Generic view (list ↔ form + fixed action bar) |
+| `routes/web.php` → `maestro()`         | Registers a maintainer's 4 routes in one line |
+
+## Demo modules
+
+| Module            | Type                  | What it shows                              |
+|-------------------|-----------------------|--------------------------------------------|
+| Home              | Special (widgets)     | KPIs in CLP, sales chart, shortcuts        |
+| Products          | A · CRUD (maintainer) | Price/stock in CLP, family and unit        |
+| Families          | A · CRUD              | Simple maintainer                          |
+| Units of measure  | A · CRUD              | Relation with "unit type"                  |
+| Unit types        | A · CRUD              | Base maintainer                            |
+| Customers         | A · CRUD              | RUT, comuna (global reference)             |
+| Sales             | B · Master-detail     | Header + lines, 19% VAT, CLP totals        |
+
+Architecture patterns from the original ERP (clean version):
+
+- **Automatic multi-tenancy** — `BelongsToEmpresa` trait: a global scope that
+  filters by the user's `idgen_empresa` and assigns it on create.
+- **Auditing** — `HasAuditoria` trait: `userins`/`fechains` on create and
+  `usermod`/`fechamod` on save.
+- **State-based soft-delete** — `habilitado = false`, never a hard DELETE.
+- **Original naming conventions** — `gen_`/`ven_` prefixes, PK `id` + table
+  (`idgen_producto`, `idven_venta`), CLP as integers.
+
+## Demo accounts
+
+| Company                  | Email                   | Password   |
+|--------------------------|-------------------------|------------|
+| Comercial Andes S.A.     | `admin@empresa-a.com`   | `password` |
+| Distribuidora Sur Ltda.  | `admin@empresa-b.com`   | `password` |
+
+Log in with A and with B in different browsers: each one only sees its own
+products, customers and sales (multi-tenant).
+
+## Running locally
+
+Requires a reachable MySQL. Create the database and set `DB_*` in `.env`:
+
+```bash
+mysql -u root -p -e "CREATE DATABASE laraventas CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+composer install
+npm install
+cp .env.example .env        # if it doesn't exist
+php artisan key:generate
+# edit .env -> DB_DATABASE / DB_USERNAME / DB_PASSWORD
+php artisan migrate:fresh --seed
+npm run build               # or "npm run dev" in development
+php artisan serve
+```
+
+Open http://localhost:8000.
+
+## Deploying to Railway
+
+The repo ships a `Dockerfile` (official PHP image + Vite build), so Railway
+builds it with Docker.
+
+1. Push the repo to GitHub and create a Railway project from it. In the
+   service **Settings → Build**, set the builder to **Dockerfile**.
+2. Add a **MySQL** service to the project (New → Database → MySQL).
+3. In the app service **Variables**, add:
+   ```
+   APP_KEY=base64:...        # generate with: php artisan key:generate --show
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=https://<your-app>.up.railway.app
+
+   DB_CONNECTION=mysql
+   DB_HOST=${{MySQL.MYSQLHOST}}
+   DB_PORT=${{MySQL.MYSQLPORT}}
+   DB_DATABASE=${{MySQL.MYSQLDATABASE}}
+   DB_USERNAME=${{MySQL.MYSQLUSER}}
+   DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
+
+   SESSION_DRIVER=database
+   PORT=8080
+   ```
+   (the `${{MySQL.*}}` references are injected by Railway from the MySQL
+   service.)
+4. Deploy. On every boot, `deploy/start.sh`:
+   - waits for MySQL to accept connections,
+   - caches config/routes/views,
+   - runs `migrate:fresh --seed` (clean, deterministic demo data),
+   - serves the app on `$PORT`.
+
+> The data is regenerated clean on every deploy: exactly what you want for a
+> public demo. For persistent data, remove `migrate:fresh` from `start.sh`.
+
+## Layout
+
+```
+app/
+  Http/Controllers/   Maestro (base) + Producto/Familia/Unidadmedida/.../Venta + Dashboard/Auth
+  Models/             MaestroModel (base) + gen_*/ven_* + Empresa/User
+  Models/Concerns/    BelongsToEmpresa, HasAuditoria
+  Support/Maestro/    Maestro.php (declarative builder)
+resources/js/
+  Layouts/AppLayout.vue       sidebar + topbar (the "look")
+  components/Botonera.vue      fixed action bar
+  lib/format.js                CLP / dates / paths
+  Pages/Maestro/Index.vue      generic view for ALL maintainers
+  Pages/Ventas/                master-detail (Index + Show)
+  Pages/Dashboard.vue          widgets / KPIs
+routes/web.php                login + maestro() + sales
+deploy/start.sh               Railway boot script (MySQL)
+Dockerfile                    build/deploy image
+```
+
+---
+
+<a id="espanol"></a>
+
+## Español
 
 Demo de portafolio que reproduce la **estructura, los patrones y la visual** de un
 ERP real (sidebar, topbar, mantenedores con botonera fija, maestro-detalle,
@@ -8,14 +180,17 @@ MySQL** definida en `.env` y desplegable en **Railway** en pocos minutos.
 > Reescritura simplificada hecha desde cero para mostrar la arquitectura.
 > No contiene código del sistema original ni conexiones a bases externas.
 
-## Stack
+### Stack
 
-- **Backend:** Laravel 13 (PHP 8.3+)
+- **Backend:** Laravel 13 (PHP 8.4+)
 - **SPA:** Inertia.js + Vue 3
 - **UI:** PrimeVue 4 (tema Aura) sobre Tailwind v4
 - **BD:** MySQL (una sola conexión, vía variables `DB_*` en `.env`)
+- **Realtime (opcional):** notificaciones en vivo por WebSocket vía un servicio
+  Go complementario ([notif_service](https://github.com/tovalh/notif_service));
+  cae a polling cuando no está configurado.
 
-## El "mini-framework" de Maestros
+### El "mini-framework" de Maestros
 
 Lo más interesante de la demo: igual que en el ERP original (donde creabas un archivo
 y ya tenías CRUD, botonera, filtros y auditoría), acá un mantenedor nuevo se declara
@@ -50,7 +225,7 @@ unicidad y multi-empresa. La UI la pinta **una sola** página Vue genérica
 | `resources/js/Pages/Maestro/Index.vue` | Vista genérica (lista ↔ form + botonera fija) |
 | `routes/web.php` → `maestro()`         | Registra las 4 rutas de un maestro en 1 línea |
 
-## Módulos demo
+### Módulos demo
 
 | Módulo            | Tipo                      | Qué muestra                                  |
 |-------------------|---------------------------|----------------------------------------------|
@@ -72,7 +247,7 @@ Patrones de arquitectura del ERP original (versión limpia):
 - **Tablas con convención del original** — prefijos `gen_`/`ven_`, PK `id` + tabla
   (`idgen_producto`, `idven_venta`), CLP en enteros.
 
-## Cuentas demo
+### Cuentas demo
 
 | Empresa                   | Correo                  | Contraseña |
 |---------------------------|-------------------------|------------|
@@ -82,12 +257,12 @@ Patrones de arquitectura del ERP original (versión limpia):
 Entra con A y con B en navegadores distintos: cada una ve únicamente sus propios
 productos, clientes y ventas (multi-empresa).
 
-## Correr en local
+### Correr en local
 
 Requiere un MySQL accesible. Crea la base y ajusta `DB_*` en `.env`:
 
 ```bash
-mysql -u root -p -e "CREATE DATABASE larasaas CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -p -e "CREATE DATABASE laraventas CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 composer install
 npm install
@@ -101,16 +276,20 @@ php artisan serve
 
 Abre http://localhost:8000.
 
-## Desplegar en Railway
+### Desplegar en Railway
 
-1. Sube el repo a GitHub y crea un proyecto en Railway desde ese repo
-   (detecta Nixpacks automáticamente; ya hay `nixpacks.toml`).
+El repo incluye un `Dockerfile` (imagen PHP oficial + build de Vite), así que
+Railway lo construye con Docker.
+
+1. Sube el repo a GitHub y crea un proyecto en Railway desde ese repo. En
+   **Settings → Build** del servicio, poné el builder en **Dockerfile**.
 2. Agrega un servicio **MySQL** al proyecto (New → Database → MySQL).
 3. En **Variables** del servicio de la app, agrega:
    ```
    APP_KEY=base64:...        # genera con: php artisan key:generate --show
    APP_ENV=production
    APP_DEBUG=false
+   APP_URL=https://<tu-app>.up.railway.app
 
    DB_CONNECTION=mysql
    DB_HOST=${{MySQL.MYSQLHOST}}
@@ -120,6 +299,7 @@ Abre http://localhost:8000.
    DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
 
    SESSION_DRIVER=database
+   PORT=8080
    ```
    (las referencias `${{MySQL.*}}` las inyecta Railway desde el servicio MySQL).
 4. Deploy. En cada arranque, `deploy/start.sh`:
@@ -131,7 +311,7 @@ Abre http://localhost:8000.
 > La data se regenera limpia en cada despliegue: justo lo deseable para una demo
 > pública. Si quieres datos persistentes, quita `migrate:fresh` del `start.sh`.
 
-## Estructura
+### Estructura
 
 ```
 app/
@@ -148,5 +328,5 @@ resources/js/
   Pages/Dashboard.vue          widgets / KPIs
 routes/web.php                login + maestro() + ventas
 deploy/start.sh               arranque para Railway (MySQL)
-nixpacks.toml                 build/deploy
+Dockerfile                    imagen de build/deploy
 ```

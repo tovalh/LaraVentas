@@ -59,7 +59,7 @@ class DatabaseSeeder extends Seeder
     private function notificaciones(int $userId, int $empresaId): void
     {
         $demo = [
-            ['Bienvenido a KUDOS Demo', 'Explora los módulos desde el menú lateral.', '/', false],
+            ['Bienvenido a LaraVentas', 'Explora los módulos desde el menú lateral.', '/', false],
             ['Stock crítico', 'Hay productos por reponer. Revisa el dashboard.', '/productos', false],
             ['Nuevo cliente', 'Se registró un cliente en tu cartera.', '/clientes', false],
             ['Cierre del día', 'Recuerda revisar las ventas de hoy.', '/ventas', true],

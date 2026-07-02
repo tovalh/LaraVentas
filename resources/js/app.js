@@ -12,7 +12,7 @@ import Tooltip from 'primevue/tooltip';
 import 'primeicons/primeicons.css';
 
 createInertiaApp({
-    title: (title) => (title ? `${title} — KUDOS Demo` : 'KUDOS Demo'),
+    title: (title) => (title ? `${title} — LaraVentas` : 'LaraVentas'),
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.vue`,

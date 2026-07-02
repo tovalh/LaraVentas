@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ###############################################################################
-# Arranque en Railway (KUDOS Demo)
+# Arranque en Railway (LaraVentas)
 # - Espera a que MySQL esté disponible
 # - Cachea config/rutas/vistas
 # - Migra y siembra data demo limpia

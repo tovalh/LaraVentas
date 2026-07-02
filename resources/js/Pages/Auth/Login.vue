@@ -30,8 +30,8 @@ const usarDemo = (email) => {
          style="background: radial-gradient(circle at 30% 20%, #1e293b, #0f172a);">
         <div class="w-full max-w-md">
             <div class="text-center mb-6">
-                <div class="inline-flex w-14 h-14 rounded-2xl bg-blue-600 items-center justify-center text-white text-2xl font-bold mb-3">K</div>
-                <h1 class="text-2xl font-semibold text-white">KUDOS Demo</h1>
+                <div class="inline-flex w-14 h-14 rounded-2xl bg-blue-600 items-center justify-center text-white text-2xl font-bold mb-3">L</div>
+                <h1 class="text-2xl font-semibold text-white">LaraVentas</h1>
                 <p class="text-slate-400 text-sm">Sistema ERP · Multi-empresa</p>
             </div>
 

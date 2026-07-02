@@ -60,9 +60,9 @@ const logout = () => router.post('/logout');
                style="background: var(--kd-sidebar);">
             <div class="h-16 flex items-center gap-3 px-5 border-b border-white/10">
                 <div class="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-white"
-                     :style="{ background: empresaColor }">K</div>
+                     :style="{ background: empresaColor }">L</div>
                 <div>
-                    <div class="font-semibold leading-tight">KUDOS</div>
+                    <div class="font-semibold leading-tight">LaraVentas</div>
                     <div class="text-[11px] text-slate-400">Demo ERP</div>
                 </div>
             </div>
