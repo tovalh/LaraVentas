@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Notificacion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * API de notificaciones del usuario en sesión — réplica de
@@ -15,6 +17,47 @@ use Illuminate\Http\Request;
  */
 class NotificacionController extends Controller
 {
+    /** Página: bandeja completa del usuario (Inertia). */
+    public function index(Request $request): Response
+    {
+        $user = $request->user();
+
+        $items = Notificacion::query()
+            ->where('idusu_usuario', $user->id)
+            ->where('idgen_empresa', $user->idgen_empresa)
+            ->where('habilitado', true)
+            ->orderByDesc('idusu_notificacion')
+            ->limit(200)
+            ->get();
+
+        return Inertia::render('Notificaciones/Index', [
+            'notificaciones' => $items->map(fn ($n) => [
+                'id'      => $n->idusu_notificacion,
+                'titulo'  => $n->titulo,
+                'mensaje' => $n->mensaje,
+                'url'     => $n->url,
+                'leido'   => (bool) $n->leido,
+                'fecha'   => optional($n->fechains)->format('d-m-Y H:i:s'),
+            ]),
+        ]);
+    }
+
+    /** Botón "Enviar notificación Live": se crea una notificación a uno mismo
+     *  para probar el WebSocket (el Go la empuja y la campana se actualiza). */
+    public function enviarDemo(Request $request)
+    {
+        $user = $request->user();
+
+        Notificacion::add(
+            $user->id,
+            'Notificación de prueba',
+            'Enviada a las ' . now()->format('H:i:s') . ' para probar el WebSocket en vivo.',
+            '/notificaciones',
+        );
+
+        return back()->with('success', 'Notificación enviada. Mira la campana.');
+    }
+
     /** Listar: badge (no leídas) + últimas 20 (leídas y no leídas). */
     public function listar(Request $request): JsonResponse
     {

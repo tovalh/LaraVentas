@@ -60,6 +60,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/notificaciones/marcar-leidas', [NotificacionController::class, 'marcarLeidas'])->name('notificaciones.marcar');
     Route::get('/api/notificaciones/token', [NotificacionController::class, 'token'])->name('notificaciones.token');
 
+    // Notificaciones — página (bandeja completa) + botón de prueba del WebSocket
+    Route::get('/notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
+    Route::post('/notificaciones/enviar', [NotificacionController::class, 'enviarDemo'])->name('notificaciones.enviar');
+
     // Tipo A — Maestros (CRUD genérico)
     maestro('/productos',    ProductoController::class,         'productos');
     maestro('/familias',     FamiliaController::class,          'familias');

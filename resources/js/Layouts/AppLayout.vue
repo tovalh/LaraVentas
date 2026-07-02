@@ -20,6 +20,7 @@ const nav = [
             { label: 'Ventas', href: '/ventas', icon: 'pi pi-shopping-cart' },
             { label: 'Caja',   href: '/caja',   icon: 'pi pi-wallet' },
             { label: 'Eventos', href: '/eventos', icon: 'pi pi-bolt' },
+            { label: 'Notificaciones', href: '/notificaciones', icon: 'pi pi-bell' },
         ],
     },
     {
