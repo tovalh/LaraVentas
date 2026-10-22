@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
  *
  * Reemplaza el filtrado manual por empresa: aquí es automático y a prueba de olvidos.
  */
+// TODO(tests): feature test (Pest/PHPUnit) que pruebe el aislamiento multi-empresa:
+// un usuario de la Empresa A no puede listar, ver ni editar registros de la Empresa B.
 trait BelongsToEmpresa
 {
     public static function bootBelongsToEmpresa(): void
