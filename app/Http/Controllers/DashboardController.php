@@ -50,7 +50,7 @@ class DashboardController extends Controller
             ->get(['idgen_producto', 'codigo', 'descripcion', 'stock', 'stock_critico']);
 
         $ultimasVentas = Venta::with('cliente')->where('habilitado', true)
-            ->orderByDesc('idven_venta')->limit(6)->get();
+            ->orderByDesc('fecha')->orderByDesc('idven_venta')->limit(6)->get();
 
         return Inertia::render('Dashboard', [
             'kpis' => [

@@ -17,7 +17,8 @@ const props = defineProps({
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
-const hoy = new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
+const fechaLarga = new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
+const hoy = fechaLarga.charAt(0).toUpperCase() + fechaLarga.slice(1);
 
 const maxGrafico = computed(() => Math.max(1, ...props.grafico.map((g) => g.total)));
 // Altura de cada barra como % del alto fijo del contenedor.
@@ -37,7 +38,7 @@ const accesos = [
     <AppLayout>
         <header class="mb-6">
             <h1 class="text-2xl font-semibold text-slate-800">Hola, {{ user?.name }}</h1>
-            <p class="text-sm text-slate-500 mt-1 capitalize">{{ user?.empresa }} · {{ hoy }}</p>
+            <p class="text-sm text-slate-500 mt-1">{{ user?.empresa }} · {{ hoy }}</p>
         </header>
 
         <!-- Fila 1: KPIs -->
