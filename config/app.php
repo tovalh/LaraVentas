@@ -68,6 +68,12 @@ return [
     'timezone' => 'UTC',
 
     /*
+    | Demo pública: desplaza las fechas de la data demo una vez al día
+    | para que el dashboard siempre muestre actividad reciente.
+    */
+    'demo_rolling_dates' => (bool) env('DEMO_ROLLING_DATES', true),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
